@@ -27,11 +27,11 @@ Combination::~Combination() {
 
 }
 
-void Combination::initialize(int n, Node * nodes){
+void Combination::initialize(int n, Node * nodes, int minDeg){
 	this->nodes = nodes;
 	this->field = new bool[n];
 	this->size = n;
-	this->level = n/2;
+	this->level = n/minDeg;
 	initLevel();
 }
 
