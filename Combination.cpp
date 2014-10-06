@@ -7,11 +7,14 @@
 
 #include "Combination.h"
 #include "cstdlib"
+#include "iostream"
 
 using namespace std;
 
 Combination::Combination() {
-	step = 0;
+	step = 1;
+	level = 0;
+	size = 0;
 	field = NULL;
 	nodes = NULL;
 }
@@ -27,12 +30,9 @@ Combination::~Combination() {
 void Combination::initialize(int n, Node * nodes){
 	this->nodes = nodes;
 	this->field = new bool[n];
-	for(int i = 0; i < n/2; i++){
-		field[i] = false;
-	}
-	for(int i = n/2; i < n; i++){
-		field[i] = true;
-	}
+	this->size = n;
+	this->level = n/2;
+	initLevel();
 }
 
 void Combination::initialize(int n, Node * nodes, char * wrap){
@@ -47,17 +47,17 @@ void Combination::initialize(int n, Node * nodes, char * wrap){
 }
 
 bool Combination::next(){
-	bool clf = true;
-	for(int i = 0; i < level && clf; i++){
-		clf &= field[i];
-	}
-	if(clf){
+	int i = 0;
+	while(field[i])i++;
+	if(i == level){
 		level --;
-		if(level == 1)return false;
+		if(level == 1)
+			return (false);
 		initLevel();
 	}else{
 		moveLevel();
 	}
+	return (true);
 }
 
 void Combination::initLevel(){
@@ -71,11 +71,18 @@ void Combination::moveLevel(){
 	for(i = 0; field[i]; i++){
 		field[i] = false;
 	}
-	int reset = i;
-    for(i; !field[i]; i++);
-    int resStart = --i;
+	int reset = i+1;
+	while(!field[i])i++;
     field[i] = false;
-    for(i; i>resStart-(reset+1); i--){
-    	field[i] = true;
+    i--;
+    for(int j = i; j  > (i-reset); j--){
+    	field[j] = true;
     }
+}
+
+void Combination::print(){
+	for(int i = 0; i < size; i++){
+		cout<<field[i];
+	}
+	cout<<endl;
 }

@@ -19,6 +19,7 @@ public:
 	bool next();
 	bool test();
 	char split();
+	void print();
 
 private:
 	bool * field;
