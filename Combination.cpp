@@ -31,7 +31,7 @@ void Combination::initialize(int n, Node * nodes, int minDeg){
 	this->nodes = nodes;
 	this->field = new bool[n];
 	this->size = n;
-	this->level = n/minDeg;
+	this->level = n-minDeg; //minimalní stupò nám øíká pouze minimum uzlù, které musíme zahodit
 	initLevel();
 }
 
