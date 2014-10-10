@@ -27,8 +27,8 @@ Combination::~Combination() {
 
 }
 
-void Combination::initialize(int n, Node ** nodes, int minDeg){
-	this->nodes = nodes;
+void Combination::initialize(int n, Node ** nod, int minDeg){
+	this->nodes = nod;
 	this->field = new bool[n];
 	this->size = n;
 	this->level = n-minDeg; //minimalní stupò nám øíká pouze minimum uzlù, které musíme zahodit
@@ -90,8 +90,8 @@ void Combination::print(){
 bool Combination::test(){
 	for(int i = 0; i < this->size; i++){
 		if(field[i]){
-			for(int j=0;j < nodes[i].getCountOfNeighbours(); j++){
-				if(field[nodes[i].getNeighbour(j)->getId()]){
+			for(int j=0;j < ((int)nodes[i]->getCountOfNeighbours()); j++){
+				if(field[nodes[i]->getNeighbour(j)->getId()]){
 					return (false);
 				}
 			}

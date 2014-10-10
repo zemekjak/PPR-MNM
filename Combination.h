@@ -24,7 +24,7 @@ public:
 
 private:
 	bool * field;
-	Node * nodes;
+	Node ** nodes;
 	int step;
 	int level;
 	int size;

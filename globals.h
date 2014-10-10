@@ -23,6 +23,7 @@ int                     lowerLimit = 0;
 int                     dilatation = INT_MAX;
 int*                    maxIndependence = NULL;
 bool                    finished = false;
+Combination * 			combination = NULL;
 
 #endif	/* GLOBALS_H */
 

@@ -33,6 +33,10 @@ int readCountOfNodes(ifstream& file) {
     file.get(znak);
     // nacteni poctu uzlu grafu
     while (file.good() && (znak != '\n')) {
+    	if(znak == 13){
+    		file.get(znak);
+    		break;
+    	}
         n = n*10 + (short)znak - 48;     // odecteni nuly '0' = 48
         //cout << (short)znak << " " << n << endl;
         file.get(znak);
@@ -50,15 +54,16 @@ void readNodesFromFile(ifstream& file, Node** nodes, unsigned int nodeCount) {
                 throw "Chyba cteni vstupniho souboru.";
             }
             if (znak != '0' && znak != '1') {
-                throw "Neplatny obsah vstupniho souboru.";
+                throw "Neplatny obsah vstupniho souboru. 1";
             }
             if (znak == '1') {      // pridani souseda
                 nodes[i]->addNeighbour(nodes[j]);   // pridani souseda primo uzlu
             }
         }
         file.get(znak);
+        if (znak == 13) file.get(znak);
         if (znak != '\n') { // kontrola jestli jsem na konci radku
-            throw "Neplatny obsah vstupniho souboru.";
+            throw "Neplatny obsah vstupniho souboru. 2";
         }
     }
 
@@ -97,6 +102,9 @@ void cleanUp() {
             delete nodes[i];
         }
     }
+    if (combination != NULL){
+    	delete combination;
+    }
     delete [] nodes;
 //    finalize();
 }
@@ -108,6 +116,13 @@ void loadData() {
     // zjisteni poctu uzlu grafu - prvni radek vstupniho souboru
     nodeCount = readCountOfNodes(inputFile);
     cout  << ": Pocet uzlu grafu: " << nodeCount << endl;
+
+    // alokace a priprava pole uzlu
+    nodes = new Node*[nodeCount];
+    for (int i=0; i < nodeCount; i++) {
+    	nodes[i] = new Node(i);
+    }
+
     readNodesFromFile(inputFile, nodes, nodeCount);
     printNodes();
 
@@ -119,15 +134,16 @@ int main(int argc, char ** argv){
 		getParameters(argc, argv);
 		loadData();
 		cout << endl;
-		Combination * c = new Combination();
-
-		c->initialize(nodeCount, nodes, minDegree);
+		combination = new Combination();
+		minDegree = nodes[0]->getCountOfNeighbours();
+		combination->initialize(nodeCount, nodes, minDegree);
 		do{
-			if(c->test()){
-				cout<<c->getLevel();
+			if(combination->test()){
+				cout<<combination->getLevel()<<" - ";
+				combination->print();
+				break;
 			}
-		}while(c->next());
-
+		}while(combination->next());
 	}catch (const char * e) {
 		cout <<"Chyba: " << e << endl;
 	    cleanUp(); // uklid
