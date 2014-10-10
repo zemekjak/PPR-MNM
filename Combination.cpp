@@ -86,3 +86,16 @@ void Combination::print(){
 	}
 	cout<<endl;
 }
+
+bool Combination::test(){
+	for(int i = 0; i < this->size; i++){
+		if(field[i]){
+			for(int j=0;j < nodes[i].getCountOfNeighbours(); j++){
+				if(field[nodes[i].getNeighbour(j)->getId()]){
+					return (false);
+				}
+			}
+		}
+	}
+	return (true);
+}

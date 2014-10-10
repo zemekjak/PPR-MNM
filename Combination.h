@@ -7,9 +7,9 @@
 
 #ifndef COMBINATION_H_
 #define COMBINATION_H_
+#include "Node.h"
 
 
-class Node{};
 class Combination {
 public:
 	Combination();
