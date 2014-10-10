@@ -14,12 +14,13 @@ class Combination {
 public:
 	Combination();
 	~Combination();
-	void initialize(int n, Node * nodes, int minDeg);
-	void initialize(int n, Node * nodes, char * wrap);
+	void initialize(int n, Node ** nodes, int minDeg);
+	void initialize(int n, Node ** nodes, char * wrap);
 	bool next();
 	bool test();
 	char split();
 	void print();
+	int getLevel();
 
 private:
 	bool * field;

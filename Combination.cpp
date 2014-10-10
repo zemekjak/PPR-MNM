@@ -27,7 +27,7 @@ Combination::~Combination() {
 
 }
 
-void Combination::initialize(int n, Node * nodes, int minDeg){
+void Combination::initialize(int n, Node ** nodes, int minDeg){
 	this->nodes = nodes;
 	this->field = new bool[n];
 	this->size = n;
@@ -35,7 +35,7 @@ void Combination::initialize(int n, Node * nodes, int minDeg){
 	initLevel();
 }
 
-void Combination::initialize(int n, Node * nodes, char * wrap){
+void Combination::initialize(int n, Node ** nodes, char * wrap){
 	//not yet supported
 	/*
 	this->nodes = nodes;
@@ -98,4 +98,8 @@ bool Combination::test(){
 		}
 	}
 	return (true);
+}
+
+int Combination::getLevel(){
+	return level;
 }
