@@ -21,7 +21,7 @@ Combination::Combination() {
 
 Combination::~Combination() {
 	if(field != NULL){
-		delete(field);
+		delete [] field;
 		field = NULL;
 	}
 
@@ -31,7 +31,7 @@ void Combination::initialize(int n, Node ** nod, int minDeg){
 	this->nodes = nod;
 	this->field = new bool[n];
 	this->size = n;
-	this->level = n-minDeg; //minimalní stupò nám øíká pouze minimum uzlù, které musíme zahodit
+	this->level = n-minDeg; //minimalnï¿½ stupï¿½ nï¿½m ï¿½ï¿½kï¿½ pouze minimum uzlï¿½, kterï¿½ musï¿½me zahodit
 	initLevel();
 }
 
@@ -41,7 +41,7 @@ void Combination::initialize(int n, Node ** nodes, char * wrap){
 	this->nodes = nodes;
 	this->field = new bool[n];
 	this->size = n;
-	this->level = n - n/2; //nutnost ovìøit extrémní situace, viz. graf hvìzda
+	this->level = n - n/2; //nutnost ovï¿½ï¿½it extrï¿½mnï¿½ situace, viz. graf hvï¿½zda
 	this->initLevel();
 	*/
 }

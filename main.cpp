@@ -67,7 +67,7 @@ void readNodesFromFile(ifstream& file, Node** nodes, unsigned int nodeCount) {
         }
     }
 
-    // Pokud je nastaven failbit a není konec souboru, došlo k chybì souboru.
+    // Pokud je nastaven failbit a nenï¿½ konec souboru, doï¿½lo k chybï¿½ souboru.
     if (inputFile.fail() && !inputFile.eof()) {
         throw "Chyba cteni vstupniho souboru";
     }
@@ -150,6 +150,7 @@ int main(int argc, char ** argv){
 	    return (1);
 	}
 
+        cleanUp(); // uklid
 	return (0);
 
 }
