@@ -31,11 +31,11 @@ void Combination::initialize(int n, Node ** nod, int minDeg){
 	this->nodes = nod;
 	this->field = new bool[n];
 	this->size = n;
-	this->level = n-minDeg; //minimaln� stup� n�m ��k� pouze minimum uzl�, kter� mus�me zahodit
+	this->level = {minDeg>n/2?n-minDeg:n/2}; //minimaln� stup� n�m ��k� pouze minimum uzl�, kter� mus�me zahodit
 	initLevel();
 }
 
-void Combination::initialize(int n, Node ** nodes, char * wrap){
+void Combination::initialize(int n, Node ** nod, char * wrap){
 	//not yet supported
 	/*
 	this->nodes = nodes;
