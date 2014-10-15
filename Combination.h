@@ -15,21 +15,23 @@ public:
 	Combination();
 	~Combination();
 	void initialize(int n, Node ** nodes, int minDeg);
-	void initialize(int n, Node ** nodes, char * wrap);
+	void initialize(int n, Node ** nodes, int * wrap);
+	//paralel direct init - set work acording to number of processes (n) and number of this process (0..n-1)
+	void initialize(int n, Node ** nodes, int minDeg, int parSize, int parNumber);
 	bool next();
 	bool test();
-	char split();
+	int * split();
 	void print();
 	int getLevel();
 
 private:
-	bool * field;
+	int * field;
 	Node ** nodes;
 	int step;
 	int level;
 	int size;
 	void initLevel();
-	void moveLevel();
+	void recMove(int i);
 
 
 };
