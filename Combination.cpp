@@ -120,3 +120,7 @@ int * Combination::split(){
 	step *= 2;
 	return (out);
 }
+
+int Combination::msgLength(){
+	return (level+2);
+}

@@ -21,6 +21,7 @@ public:
 	bool next();
 	bool test();
 	int * split();
+	int msgLength();
 	void print();
 	int getLevel();
 
