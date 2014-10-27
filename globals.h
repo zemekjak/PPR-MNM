@@ -20,7 +20,7 @@ unsigned int			minDegree = 1;
 Node**                  nodes = NULL;
 ifstream                inputFile;
 int                     lowerLimit = 0;
-int                     dilatation = INT_MAX;
+int                     bestCount = 1;
 int*                    maxIndependence = NULL;
 bool                    finished = false;
 Combination * 			combination = NULL;
