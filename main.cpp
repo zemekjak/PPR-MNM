@@ -18,6 +18,8 @@
 
 using namespace std;
 
+#define MPI_RUN
+
 void getParameters(int argc, char** argv) {
     if (argc != 2) {
         throw "Zadejte nazev souboru reprezentujiciho graf.";
@@ -39,7 +41,6 @@ int readCountOfNodes(ifstream& file) {
     		break;
     	}
         n = n*10 + (short)znak - 48;     // odecteni nuly '0' = 48
-        //cout << (short)znak << " " << n << endl;
         file.get(znak);
     }
     return (n);
@@ -75,7 +76,9 @@ void readNodesFromFile(ifstream& file, Node** nodes, unsigned int nodeCount) {
 }
 
 void printNodes() {
-    //if (processId == 0) {
+#ifdef MPI_RUN
+    if (processId == 0) {
+#endif
         cout << ": Uzly:" << endl;
         for (unsigned int i=0; i < nodeCount; i++) {
             cout << nodes[i]->getId() << " -> ";
@@ -85,10 +88,12 @@ void printNodes() {
             cout << endl;
         }
         cout << endl;
-//    }
-//    else {
-//        cout << processId << ": Uzly: Nacteny." << endl;
-//    }
+#ifdef MPI_RUN
+    }
+    else {
+        cout << processId << ": Uzly: Nacteny." << endl;
+    }
+#endif
 }
 
 /**
@@ -107,7 +112,9 @@ void cleanUp() {
     	delete combination;
     }
     delete [] nodes;
-//    finalize();
+    if(maxIndependence == NULL){
+    	delete[] maxIndependence;
+    }
 }
 
 /**
@@ -127,6 +134,14 @@ void loadData() {
     readNodesFromFile(inputFile, nodes, nodeCount);
     printNodes();
 
+}
+
+void printBest(){
+	cout<<"Best: "<<bestCount<<endl;
+	for(int i = 0; i<bestCount; i++){
+		cout << maxIndependence[i] << " ";
+	}
+	cout << endl;
 }
 
 void executeParalel(int argc, char ** argv){
@@ -166,10 +181,11 @@ void executeParalel(int argc, char ** argv){
 	}
 	barier();
 	stopTime = time();
-	finalize();
 	if(processId == 0){
 		cout << "Runtime: "<< stopTime-startTime << endl;
 	}
+	printBest();
+	finalize();
 }
 
 void executeStandalone(int argc, char ** argv){
@@ -186,6 +202,7 @@ void executeStandalone(int argc, char ** argv){
 			break;
 		}
 	}while(combination->next());
+	printBest();
 }
 
 int main(int argc, char ** argv){
