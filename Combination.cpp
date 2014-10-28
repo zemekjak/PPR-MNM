@@ -55,6 +55,7 @@ void Combination::initialize(int n, Node ** nod, int * wrap){
 	this->nodes = nodes;
 	size = n;
 	memcpy(field, wrap+2*sizeof(int), level*sizeof(int));
+	delete[] wrap;
 }
 
 bool Combination::next(){
@@ -96,7 +97,7 @@ void Combination::print(){
 
 bool Combination::test(){
 	for(int i = 0; i < level; i++){
-		for(int j = 0; j < nodes[field[i]]->getCountOfNeighbours();j++){
+		for(unsigned int j = 0; j < nodes[field[i]]->getCountOfNeighbours();j++){
 			for(int k = 0;k < level; k++){
 				if(field[k] == nodes[field[i]]->getNeighbour(j)->getId()){
 					return (false);
@@ -112,6 +113,9 @@ int Combination::getLevel(){
 }
 
 int * Combination::split(){
+	if(level == (limit+1)){
+		return (NULL);
+	}
 	int * out = new int[(level+2)];
 	out[0]=level;
 	out[1]=step*2;

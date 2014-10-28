@@ -77,7 +77,7 @@ void readNodesFromFile(ifstream& file, Node** nodes, unsigned int nodeCount) {
 
 void printNodes() {
 #ifdef MPI_RUN
-    if (processId == 0) {
+    if (processId == -1) {
 #endif
         cout << ": Uzly:" << endl;
         for (unsigned int i=0; i < nodeCount; i++) {
@@ -183,8 +183,8 @@ void executeParalel(int argc, char ** argv){
 	stopTime = time();
 	if(processId == 0){
 		cout << "Runtime: "<< stopTime-startTime << endl;
+		printBest();
 	}
-	printBest();
 	finalize();
 }
 

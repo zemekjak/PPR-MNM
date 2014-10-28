@@ -53,7 +53,7 @@ void checkForTerminate(){
     MPI_Iprobe ( MPI_ANY_SOURCE, MSG_TERMINATE, MPI_COMM_WORLD, &flag, &status );
     if(!flag)return;
     cout<<"Process:"<<processId<<" msg from:"<<status.MPI_SOURCE<<" tag:"<<status.MPI_TAG<<endl;
-    MPI_Recv(&buf,0,MPI_INT,MSG_REQUEST_WORK,status.MPI_TAG,MPI_COMM_WORLD,&status);
+    MPI_Recv(&buf,0,MPI_INT,status.MPI_SOURCE,status.MPI_TAG,MPI_COMM_WORLD,&status);
     cout<<"Process:"<<processId<<" msg recieved"<<endl;
     finished = true;
 }
@@ -93,15 +93,72 @@ void sendBest(){
     delete[] msg;
 }
 
+void sendWork(int dest){
+    int * buf= combination->split();
+    if(buf==NULL){
+        sendRefuse(dest);
+        return;
+    }
+    cout<<"Process:"<<processId<<" msg to:"<<dest<<" tag:"<<MSG_WORK_REQUEST_ACCEPTED<<endl;
+    MPI_Send(buf, buf[0]+2, MPI_INT, dest, MSG_WORK_REQUEST_ACCEPTED, MPI_COMM_WORLD);
+        cout<<"Process:"<<processId<<" msg send"<<endl;
+    delete[] buf;
+}
+
+void checkForWorkRequest(){
+    int flag;
+    MPI_Status status;
+    int buf;
+    while(!finished){
+        MPI_Iprobe ( MPI_ANY_SOURCE, MSG_REQUEST_WORK, MPI_COMM_WORLD, &flag, &status );
+        if(!flag)break;
+        cout<<"Process:"<<processId<<" msg from:"<<status.MPI_SOURCE<<" tag:"<<status.MPI_TAG<<endl;
+        MPI_Recv(&buf,0,MPI_INT,status.MPI_SOURCE,status.MPI_TAG,MPI_COMM_WORLD,&status);
+        cout<<"Process:"<<processId<<" msg recieved"<<endl;
+        sendWork(status.MPI_SOURCE);
+    }
+}
+
+void checkForBestMsg(){
+    int flag;
+    MPI_Status status;
+    int * msg=new int[nodeCount];
+    bool improved=false;
+    while(!finished){
+        MPI_Iprobe ( MPI_ANY_SOURCE, MSG_BEST_RESULT, MPI_COMM_WORLD, &flag, &status );
+        if(!flag)break;
+        cout<<"Process:"<<processId<<" msg from:"<<status.MPI_SOURCE<<" tag:"<<status.MPI_TAG<<endl;
+        MPI_Recv(msg,nodeCount+1,MPI_INT,status.MPI_SOURCE,status.MPI_TAG,MPI_COMM_WORLD,&status);
+        cout<<"Process:"<<processId<<" msg recieved"<<endl;
+        if(bestCount<msg[0]){
+            bestCount=msg[0];
+            if(maxIndependence==NULL){
+                maxIndependence= new int[bestCount];
+            }
+            memcpy(maxIndependence,msg+sizeof(int),nodeCount*sizeof(int));
+            improved=true;
+        }
+    }
+    if(improved){
+        sendBest();
+    }
+    delete[] msg;
+}
+
+void checkForMsg(){
+    checkForBestMsg();
+    checkForWorkRequest();
+    checkForTerminate();
+}
+
 int * getWork(){
     MPI_Status status;
     int i=1;
-    int * buf=new int[nodeCount+1];
+    int * buf=new int[nodeCount];
     cout<<"Process:"<<processId<<" msg to:"<<(processId+i)%processNumber<<" tag:"<<MSG_REQUEST_WORK<<endl;
     MPI_Send(NULL, 0, MPI_INT, (processId+i+workRequestOffset)%processNumber, MSG_REQUEST_WORK, MPI_COMM_WORLD);
     cout<<"Process:"<<processId<<" msg send"<<endl;
     while(i<processNumber){  // cekani jestli nekdo odpovi na zadost o praci
-    	cout<< processId << " : " << i << endl;
         MPI_Recv(buf, nodeCount+1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
         // TADY SE TO ZASEKAVA KVULI BLOKUJICIMU CEKANI NA ZPRAVU
         cout<<"Process:"<<processId<<" msg from:"<<status.MPI_SOURCE<<" tag:"<<status.MPI_TAG<<endl<<"Process:"<<processId<<" msg recieved"<<endl;
@@ -130,6 +187,7 @@ int * getWork(){
             case MSG_TERMINATE:{        // dostal jsem prikaz k ukonceni -> koncim a preposilam zprav sousedovi
                 finished=true;
                 cout<<"Process:"<<processId<<"Recieved termination msg"<<endl;
+                delete[] buf;
                 return (NULL);
             }break;
             case MSG_TOKEN:{
@@ -150,72 +208,14 @@ int * getWork(){
         }
        
     }
-    sendTerminate();
-    finished=true;
+    checkForMsg();
+    if(!finished){
+    	sendTerminate();
+        finished=true;
+    }
+    delete[] buf;
     return (NULL);
 }
-
-void sendWork(int dest){
-    int * buf= combination->split();
-    if(buf==NULL){
-        sendRefuse(dest);
-        return;
-    }
-    cout<<"Process:"<<processId<<" msg to:"<<dest<<" tag:"<<MSG_WORK_REQUEST_ACCEPTED<<endl;
-    MPI_Send(buf, buf[0]+2, MPI_INT, dest, MSG_WORK_REQUEST_ACCEPTED, MPI_COMM_WORLD);
-        cout<<"Process:"<<processId<<" msg send"<<endl;
-    delete[] buf;
-}
-
-void checkForWorkRequest(){
-    int flag;
-    MPI_Status status;
-    int buf;
-    while(!finished){
-        MPI_Iprobe ( MPI_ANY_SOURCE, MSG_REQUEST_WORK, MPI_COMM_WORLD, &flag, &status );
-        if(!flag)break;
-        cout<<"Process:"<<processId<<" msg from:"<<status.MPI_SOURCE<<" tag:"<<status.MPI_TAG<<endl;
-        MPI_Recv(&buf,0,MPI_INT,MSG_REQUEST_WORK,status.MPI_TAG,MPI_COMM_WORLD,&status);
-        cout<<"Process:"<<processId<<" msg recieved"<<endl;
-        sendWork(status.MPI_SOURCE);
-    }
-}
-
-void checkForBestMsg(){
-    int flag;
-    MPI_Status status;
-    int * msg=new int[nodeCount+1];
-    bool improved=false;
-    while(!finished){
-        MPI_Iprobe ( MPI_ANY_SOURCE, MSG_BEST_RESULT, MPI_COMM_WORLD, &flag, &status );
-        if(!flag)break;
-        cout<<"Process:"<<processId<<" msg from:"<<status.MPI_SOURCE<<" tag:"<<status.MPI_TAG<<endl;
-        MPI_Recv(msg,nodeCount+1,MPI_INT,status.MPI_SOURCE,MSG_BEST_RESULT,MPI_COMM_WORLD,&status);
-        cout<<"Process:"<<processId<<" msg recieved"<<endl;
-        if(bestCount<msg[0]){
-            bestCount=msg[0];
-            if(maxIndependence==NULL){
-                maxIndependence= new int[bestCount];
-            }
-            memcpy(maxIndependence,msg+sizeof(int),nodeCount*sizeof(int));
-            improved=true;
-        }
-    }
-    if(improved){
-        sendBest();
-    }
-    delete[] msg;
-}
-
-void checkForMsg(){
-    checkForBestMsg();
-    checkForWorkRequest();
-    checkForTerminate();
-}
-
-
-
-
 
 void initialize(int argc,char **argv){
     MPI_Init(&argc, &argv );
