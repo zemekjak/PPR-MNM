@@ -9,7 +9,6 @@
 #include "cstdlib"
 #include "iostream"
 #include "cstring"
-
 using namespace std;
 
 Combination::Combination() {
@@ -38,7 +37,7 @@ void Combination::initialize(int n, Node ** nodes, int minDeg, int parSize, int 
 void Combination::initialize(int n, Node ** nodes, int minDeg){
 	this->nodes = nodes;
 	this->size = n;
-	this->level = {minDeg>n/2?n-minDeg:n/2};
+	this->level = minDeg>n/2?n-minDeg:n/2;
 	if(field!=NULL){
 		delete field;
 	}
@@ -59,11 +58,12 @@ void Combination::initialize(int n, Node ** nod, int * wrap){
 }
 
 bool Combination::next(){
+	if(level<=limit)return (false);
 	for(int i=0;i<step;i++){
 		if(field[0]==(size-level)){
 			level--;
 			initLevel();
-			if(level<2)return (false);
+			if(level<=limit)return (false);
 			return (true);
 		}
 		recMove(level-1);
@@ -124,3 +124,13 @@ int * Combination::split(){
 int Combination::msgLength(){
 	return (level+2);
 }
+
+int * Combination::getVals(){
+	int * out = new int[level];
+	memcpy(out,field,level*sizeof(int));
+	return (out);
+}
+void Combination::setLimit(int lim){
+	limit = lim;
+}
+

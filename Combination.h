@@ -24,6 +24,8 @@ public:
 	int msgLength();
 	void print();
 	int getLevel();
+	int * getVals();
+	void setLimit(int lim);
 
 private:
 	int * field;
@@ -31,6 +33,7 @@ private:
 	int step;
 	int level;
 	int size;
+	int limit = 1;
 	void initLevel();
 	void recMove(int i);
 

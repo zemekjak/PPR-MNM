@@ -35,7 +35,9 @@ double time() {
 }
 
 void barier(){
+	cout << "Process:" << processId <<" is waiting for others."<<endl;
     MPI_Barrier(MPI_COMM_WORLD);
+    cout << "Process:" <<processId <<": Waiting ended"<<endl;
 }
 
 void sendRefuse(int dest){ // odmitnuti poslani prace, protoze proces sam praci nema
@@ -44,11 +46,23 @@ void sendRefuse(int dest){ // odmitnuti poslani prace, protoze proces sam praci 
     cout<<"Process:"<<processId<<" msg send"<<endl;
 }
 
+void checkForTerminate(){
+    int flag;
+    MPI_Status status;
+    int buf;
+    MPI_Iprobe ( MPI_ANY_SOURCE, MSG_TERMINATE, MPI_COMM_WORLD, &flag, &status );
+    if(!flag)return;
+    cout<<"Process:"<<processId<<" msg from:"<<status.MPI_SOURCE<<" tag:"<<status.MPI_TAG<<endl;
+    MPI_Recv(&buf,0,MPI_INT,MSG_REQUEST_WORK,status.MPI_TAG,MPI_COMM_WORLD,&status);
+    cout<<"Process:"<<processId<<" msg recieved"<<endl;
+    finished = true;
+}
+
 void sendTerminate(){
     for(int i=0;i<processNumber;i++){
         if(i==processId)continue;
-        cout<<"Process:"<<processId<<" msg to:"<<(processId+1)%processNumber<<" tag:"<<MSG_TERMINATE<<endl;
-        MPI_Send(NULL,0,MPI_INT, processId+1, MSG_TERMINATE, MPI_COMM_WORLD);
+        cout<<"Process:"<<processId<<" msg to:"<<i<<" tag:"<<MSG_TERMINATE<<endl;
+        MPI_Send(NULL,0,MPI_INT, i, MSG_TERMINATE, MPI_COMM_WORLD);
         cout<<"Process:"<<processId<<" msg send"<<endl; 
     }
 }
@@ -68,14 +82,26 @@ void recieveToken(int * t){
 	//TODO maybe will be useless;
 }
 
+void sendBest(){
+    int * msg = new int[nodeCount+1];
+    msg[0]=bestCount;
+    combination->setLimit(bestCount);
+    memcpy(msg+sizeof(int),maxIndependence,nodeCount*sizeof(int));
+    cout<<"Process:"<<processId<<" msg to:"<<(processId+1)%processNumber<<" tag:"<<MSG_BEST_RESULT<<endl;
+    MPI_Send(msg, nodeCount+1, MPI_INT, (processId+1)%processNumber, MSG_BEST_RESULT, MPI_COMM_WORLD);
+    cout<<"Process:"<<processId<<" msg send"<<endl;
+    delete[] msg;
+}
+
 int * getWork(){
     MPI_Status status;
     int i=1;
     int * buf=new int[nodeCount+1];
     cout<<"Process:"<<processId<<" msg to:"<<(processId+i)%processNumber<<" tag:"<<MSG_REQUEST_WORK<<endl;
-    MPI_Send(NULL, 0, MPI_INT, (processId+i)%processNumber, MSG_REQUEST_WORK, MPI_COMM_WORLD);
+    MPI_Send(NULL, 0, MPI_INT, (processId+i+workRequestOffset)%processNumber, MSG_REQUEST_WORK, MPI_COMM_WORLD);
     cout<<"Process:"<<processId<<" msg send"<<endl;
     while(i<processNumber){  // cekani jestli nekdo odpovi na zadost o praci
+    	cout<< processId << " : " << i << endl;
         MPI_Recv(buf, nodeCount+1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
         // TADY SE TO ZASEKAVA KVULI BLOKUJICIMU CEKANI NA ZPRAVU
         cout<<"Process:"<<processId<<" msg from:"<<status.MPI_SOURCE<<" tag:"<<status.MPI_TAG<<endl<<"Process:"<<processId<<" msg recieved"<<endl;
@@ -88,7 +114,7 @@ int * getWork(){
                 if((i+workRequestOffset)== processNumber){
                 	i++;
                 }
-                if(i == processNumber){// obeslal jsem vsechny sousedy a nidko mi neposlal praci
+                if(i >= processNumber){// obeslal jsem vsechny sousedy a nidko mi neposlal praci
                     cout<<"Process:"<<processId<<" : No one want to share work :-("<<endl;
                     break;
                 }
@@ -141,40 +167,18 @@ void sendWork(int dest){
     delete[] buf;
 }
 
-void sendBest(){
-    int * msg = new int[nodeCount+1];
-    msg[0]=bestCount;
-    memcpy(msg+sizeof(int),maxIndependence,nodeCount*sizeof(int));
-    cout<<"Process:"<<processId<<" msg to:"<<(processId+1)%processNumber<<" tag:"<<MSG_BEST_RESULT<<endl;
-    MPI_Send(msg, nodeCount+1, MPI_INT, (processId+1)%processNumber, MSG_BEST_RESULT, MPI_COMM_WORLD);
-    cout<<"Process:"<<processId<<" msg send"<<endl;
-    delete[] msg;
-}
-
 void checkForWorkRequest(){
     int flag;
     MPI_Status status;
-    int * buf;
+    int buf;
     while(!finished){
         MPI_Iprobe ( MPI_ANY_SOURCE, MSG_REQUEST_WORK, MPI_COMM_WORLD, &flag, &status );
         if(!flag)break;
         cout<<"Process:"<<processId<<" msg from:"<<status.MPI_SOURCE<<" tag:"<<status.MPI_TAG<<endl;
-        MPI_Recv(buf,0,MPI_INT,MSG_REQUEST_WORK,status.MPI_TAG,MPI_COMM_WORLD,&status);
+        MPI_Recv(&buf,0,MPI_INT,MSG_REQUEST_WORK,status.MPI_TAG,MPI_COMM_WORLD,&status);
         cout<<"Process:"<<processId<<" msg recieved"<<endl;
         sendWork(status.MPI_SOURCE);
     }
-}
-
-void checkForTerminate(){
-    int flag;
-    MPI_Status status;
-    int * buf;
-    MPI_Iprobe ( MPI_ANY_SOURCE, MSG_TERMINATE, MPI_COMM_WORLD, &flag, &status );
-    if(!flag)break;
-    cout<<"Process:"<<processId<<" msg from:"<<status.MPI_SOURCE<<" tag:"<<status.MPI_TAG<<endl;
-    MPI_Recv(buf,0,MPI_INT,MSG_REQUEST_WORK,status.MPI_TAG,MPI_COMM_WORLD,&status);
-    cout<<"Process:"<<processId<<" msg recieved"<<endl;
-    finished = true;
 }
 
 void checkForBestMsg(){

@@ -12,6 +12,7 @@
 #include <climits>
 
 #include "Combination.h"
+#include "Comunication.h"
 #include "File.h"
 #include "globals.h"
 
@@ -47,8 +48,8 @@ int readCountOfNodes(ifstream& file) {
 void readNodesFromFile(ifstream& file, Node** nodes, unsigned int nodeCount) {
     // nacteni a zpracovani matice sousednosti ze souboru
     char znak;
-    for (int i=0; i < nodeCount; i++) {
-        for (int j=0; j < nodeCount; j++) { // nacteni jednoho radku
+    for (unsigned int i=0; i < nodeCount; i++) {
+        for (unsigned int j=0; j < nodeCount; j++) { // nacteni jednoho radku
             file.get(znak);
             if (file.fail()) {
                 throw "Chyba cteni vstupniho souboru.";
@@ -76,9 +77,9 @@ void readNodesFromFile(ifstream& file, Node** nodes, unsigned int nodeCount) {
 void printNodes() {
     //if (processId == 0) {
         cout << ": Uzly:" << endl;
-        for (int i=0; i < nodeCount; i++) {
+        for (unsigned int i=0; i < nodeCount; i++) {
             cout << nodes[i]->getId() << " -> ";
-            for (int j = 0; j < nodes[i]->getCountOfNeighbours(); j++) {
+            for (unsigned int j = 0; j < nodes[i]->getCountOfNeighbours(); j++) {
                 cout << nodes[i]->getNeighbour(j)->getId() << ", ";
             }
             cout << endl;
@@ -98,7 +99,7 @@ void cleanUp() {
         inputFile.close();
     }
     if (nodes != NULL) {
-        for (int i=0; i<nodeCount; i++) {
+        for (unsigned int i=0; i<nodeCount; i++) {
             delete nodes[i];
         }
     }
@@ -119,7 +120,7 @@ void loadData() {
 
     // alokace a priprava pole uzlu
     nodes = new Node*[nodeCount];
-    for (int i=0; i < nodeCount; i++) {
+    for (unsigned int i=0; i < nodeCount; i++) {
     	nodes[i] = new Node(i);
     }
 
@@ -128,29 +129,76 @@ void loadData() {
 
 }
 
-int main(int argc, char ** argv){
+void executeParalel(int argc, char ** argv){
 	double startTime, stopTime;
-	try {
-		getParameters(argc, argv);
-		loadData();
-		cout << endl;
-		combination = new Combination();
-		minDegree = nodes[0]->getCountOfNeighbours();
-		combination->initialize(nodeCount, nodes, minDegree);
+	initialize(argc, argv);
+	barier();
+	startTime = time();
+	getParameters(argc, argv);
+	int * buf;
+	combination = new Combination();
+	loadData();
+	nodeDegree = nodes[0]->getCountOfNeighbours();
+	combination->initialize(nodeCount, nodes, nodeDegree,processNumber, processId);
+	int i = 1;
+	while(!finished){
 		do{
 			if(combination->test()){
 				cout<<combination->getLevel()<<" - ";
 				combination->print();
+				bestCount = combination->getLevel();
+				delete[] maxIndependence;
+				maxIndependence = combination->getVals();
+				sendBest();
 				break;
 			}
+			if(i%100 == 0){//every 100 iteration check for messages
+				checkForMsg();
+			}
+			i++;
 		}while(combination->next());
+		buf = getWork();
+		if(buf != NULL){
+			combination->initialize(nodeCount, nodes, buf);
+		}else{
+			break;
+		}
+	}
+	barier();
+	stopTime = time();
+	finalize();
+	if(processId == 0){
+		cout << "Runtime: "<< stopTime-startTime << endl;
+	}
+}
+
+void executeStandalone(int argc, char ** argv){
+	getParameters(argc, argv);
+	loadData();
+	cout << endl;
+	combination = new Combination();
+	nodeDegree = nodes[0]->getCountOfNeighbours();
+	combination->initialize(nodeCount, nodes, nodeDegree);
+	do{
+		if(combination->test()){
+			cout<<combination->getLevel()<<" - ";
+			combination->print();
+			break;
+		}
+	}while(combination->next());
+}
+
+int main(int argc, char ** argv){
+	try {
+		//executeStandalone(argc, argv);
+		executeParalel(argc,argv);
 	}catch (const char * e) {
 		cout <<"Chyba: " << e << endl;
 	    cleanUp(); // uklid
 	    return (1);
 	}
 
-        cleanUp(); // uklid
+    cleanUp(); // uklid
 	return (0);
 
 }

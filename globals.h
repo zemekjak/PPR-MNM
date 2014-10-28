@@ -16,10 +16,9 @@
 #include "Node.h"
   
 unsigned int            nodeCount = 0;
-unsigned int			minDegree = 1;
+unsigned int			nodeDegree = 1;
 Node**                  nodes = NULL;
 ifstream                inputFile;
-int                     lowerLimit = 0;
 int                     bestCount = 1;
 int*                    maxIndependence = NULL;
 bool                    finished = false;
