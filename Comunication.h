@@ -36,6 +36,7 @@ double time() {
 
 void barier(){
 	cout << "Process:" << processId <<" is waiting for others."<<endl;
+	cout.flush();
     MPI_Barrier(MPI_COMM_WORLD);
     cout << "Process:" <<processId <<": Waiting ended"<<endl;
 }

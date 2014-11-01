@@ -112,7 +112,7 @@ void cleanUp() {
     	delete combination;
     }
     delete [] nodes;
-    if(maxIndependence == NULL){
+    if(maxIndependence != NULL){
     	delete[] maxIndependence;
     }
 }
@@ -185,6 +185,7 @@ void executeParalel(int argc, char ** argv){
 		cout << "Runtime: "<< stopTime-startTime << endl;
 		printBest();
 	}
+    cleanUp(); // uklid
 	finalize();
 }
 
@@ -203,19 +204,21 @@ void executeStandalone(int argc, char ** argv){
 		}
 	}while(combination->next());
 	printBest();
+    cleanUp(); // uklid
 }
 
 int main(int argc, char ** argv){
 	try {
-		//executeStandalone(argc, argv);
+#ifdef MPI_RUN
 		executeParalel(argc,argv);
+#else
+		executeStandalone(argc, argv);
+#endif
 	}catch (const char * e) {
 		cout <<"Chyba: " << e << endl;
 	    cleanUp(); // uklid
 	    return (1);
 	}
-
-    cleanUp(); // uklid
 	return (0);
 
 }
