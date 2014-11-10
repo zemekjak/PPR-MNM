@@ -100,7 +100,7 @@ bool Combination::test(){
 	for(int i = 0; i < level; i++){
 		for(unsigned int j = 0; j < nodes[field[i]]->getCountOfNeighbours();j++){
 			for(int k = 0;k < level; k++){
-				if(field[k] == nodes[field[i]]->getNeighbour(j)->getId()){
+				if(field[k] == (int)nodes[field[i]]->getNeighbour(j)->getId()){
 					return (false);
 				}
 			}

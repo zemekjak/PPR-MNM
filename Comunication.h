@@ -60,6 +60,7 @@ void checkForTerminate(){
     finished = true;
 }
 
+
 void sendTerminate(){
     for(int i=0;i<processNumber;i++){
         if(i==processId)continue;
@@ -257,4 +258,3 @@ void finalize(){
 
 
 #endif	/* COMMUNICATION_H */
-
