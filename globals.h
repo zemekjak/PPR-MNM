@@ -14,6 +14,7 @@
 #include <cstring>
 #include <climits>
 #include "Node.h"
+#include "Combination.h"
   
 unsigned int            nodeCount = 0;
 unsigned int			nodeDegree = 1;
