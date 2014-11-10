@@ -33,7 +33,7 @@ private:
 	int step;
 	int level;
 	int size;
-	int limit = 1;
+	int limit;
 	void initLevel();
 	void recMove(int i);
 

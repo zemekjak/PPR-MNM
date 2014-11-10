@@ -15,13 +15,14 @@ Combination::Combination() {
 	step = 1;
 	level = 0;
 	size = 0;
+	limit = 0;
 	field = NULL;
 	nodes = NULL;
 }
 
 Combination::~Combination() {
 	if(field != NULL){
-		delete [] field;
+		delete[] field;
 		field = NULL;
 	}
 
@@ -39,7 +40,7 @@ void Combination::initialize(int n, Node ** nodes, int minDeg){
 	this->size = n;
 	this->level = minDeg>n/2?n-minDeg:n/2;
 	if(field!=NULL){
-		delete field;
+		delete[] field;
 	}
 	this->field = new int[this->level];
 	initLevel();
@@ -117,6 +118,7 @@ int * Combination::split(){
 		return (NULL);
 	}
 	int * out = new int[(level+2)];
+	cout<<"Split create wrap: "<<out<<endl;
 	out[0]=level;
 	out[1]=step*2;
 	memcpy(out+2*sizeof(int),field,level*sizeof(int));

@@ -107,11 +107,11 @@ void cleanUp() {
         for (unsigned int i=0; i<nodeCount; i++) {
             delete nodes[i];
         }
+        delete[] nodes;
     }
     if (combination != NULL){
     	delete combination;
     }
-    delete [] nodes;
     if(maxIndependence != NULL){
     	delete[] maxIndependence;
     }
@@ -130,6 +130,7 @@ void loadData() {
     for (unsigned int i=0; i < nodeCount; i++) {
     	nodes[i] = new Node(i);
     }
+    cout<<endl;
 
     readNodesFromFile(inputFile, nodes, nodeCount);
     printNodes();
@@ -147,6 +148,14 @@ void printBest(){
 void executeParalel(int argc, char ** argv){
 	double startTime, stopTime;
 	initialize(argc, argv);
+#ifdef DEBUGFile
+	ofstream ofs;
+	string s = "./p";
+	s += (char)(processId+48);
+	s += ".txt";
+	ofs.open(s.c_str(), ios::out);
+	cout.rdbuf(ofs.rdbuf());
+#endif
 	barier();
 	startTime = time();
 	getParameters(argc, argv);
@@ -162,7 +171,10 @@ void executeParalel(int argc, char ** argv){
 				cout<<combination->getLevel()<<" - ";
 				combination->print();
 				bestCount = combination->getLevel();
-				delete[] maxIndependence;
+                if(maxIndependence != NULL){
+                	delete[] maxIndependence;
+                	maxIndependence = NULL;
+                }
 				maxIndependence = combination->getVals();
 				sendBest();
 				break;
