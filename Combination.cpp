@@ -55,6 +55,7 @@ void Combination::initialize(int n, Node ** nod, int * wrap){
 	field = new int[level];
 	this->nodes = nodes;
 	size = n;
+	cout<<level<<" "<<step<<" "<<sizeof(field)<<endl;
 	memcpy(field, wrap+2*sizeof(int), level*sizeof(int));
 	delete[] wrap;
 }
