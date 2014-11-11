@@ -11,6 +11,9 @@
 #include <cstring>
 #include <climits>
 
+//#define DEBUGFile
+//#define MEM_DEBUG
+//#define MPI_MSG_DEBUG
 //#include "MemManagment.h"
 #include "Combination.h"
 #include "Comunication.h"
@@ -20,9 +23,6 @@
 using namespace std;
 
 #define MPI_RUN
-//#define DEBUGFile
-//#define MEM_DEBUG
-//#define MPI_MSG_DEBUG
 
 void getParameters(int argc, char** argv) {
     if (argc != 2) {

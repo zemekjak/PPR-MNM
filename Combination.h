@@ -24,6 +24,7 @@ public:
 	int msgLength();
 	void print();
 	int getLevel();
+	int getStep();
 	int * getVals();
 	void setLimit(int lim);
 

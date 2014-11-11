@@ -97,7 +97,7 @@ bool Combination::next(){
 }
 
 void Combination::initLevel(){
-
+	cout<<" Initializing level: "<<level<<" with step: "<<step<<endl;
 	for(int i = 0; i < level; i++){
 		field[i] = i;
 	}
@@ -176,3 +176,6 @@ void Combination::setLimit(int lim){
 	limit = lim;
 }
 
+int Combination::getStep(){
+	return step;
+}
