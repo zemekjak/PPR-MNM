@@ -9,6 +9,8 @@
 #include "cstdlib"
 #include "iostream"
 #include "cstring"
+
+//#include "MemManagment.h"
 using namespace std;
 
 Combination::Combination() {
@@ -22,6 +24,7 @@ Combination::Combination() {
 
 Combination::~Combination() {
 	if(field != NULL){
+		cout<<" Delete: F "<<field<<endl;
 		delete[] field;
 		field = NULL;
 	}
@@ -32,31 +35,36 @@ void Combination::initialize(int n, Node ** nodes, int minDeg, int parSize, int 
 	initialize(n, nodes, minDeg);
 	step = parNum;
 	next();
-	step = size;
+	step = parSize;
 }
 
 void Combination::initialize(int n, Node ** nodes, int minDeg){
 	this->nodes = nodes;
 	this->size = n;
-	this->level = minDeg>n/2?n-minDeg:n/2;
 	if(field!=NULL){
+		cout<<" Delete: F "<<field<<endl;
 		delete[] field;
 	}
+	this->level = minDeg>n/2?n-minDeg:n/2;
 	this->field = new int[this->level];
+	cout<<" Create: F "<<field<<" - "<<field+level-1<<endl;
 	initLevel();
 }
 
 void Combination::initialize(int n, Node ** nod, int * wrap){
-	level = wrap[0];
-	step = wrap[1];
 	if(field != NULL){
+		cout<<" Delete: F "<<field<<endl;
 		delete field;
 	}
+	level = wrap[0];
+	step = wrap[1];
 	field = new int[level];
+	cout<<" Create: F "<<field<<" - "<<field+level-1<<endl;
 	this->nodes = nodes;
 	size = n;
-	cout<<level<<" "<<step<<" "<<sizeof(field)<<endl;
-	memcpy(field, wrap+2*sizeof(int), level*sizeof(int));
+	cout<<" Copy: GW-F "<<wrap+2<<" - "<<wrap+level+1<<" to "<<field<<" - "<<field+level+1<<endl;
+	memcpy(field, wrap+2, level*sizeof(int));
+	cout<<" Delete: GW "<<wrap<<" - "<<wrap+level+1<<endl;
 	delete[] wrap;
 }
 
@@ -65,9 +73,9 @@ bool Combination::next(){
 	for(int i=0;i<step;i++){
 		if(field[0]==(size-level)){
 			level--;
-			initLevel();
 			if(level<=limit)return (false);
-			return (true);
+			initLevel();
+			continue;
 		}
 		recMove(level-1);
 	}
@@ -107,6 +115,9 @@ bool Combination::test(){
 			}
 		}
 	}
+	if(limit<level){
+		limit = level;
+	}
 	return (true);
 }
 
@@ -119,10 +130,11 @@ int * Combination::split(){
 		return (NULL);
 	}
 	int * out = new int[(level+2)];
-	cout<<"Split create wrap: "<<out<<endl;
+	cout<<" Create: SW "<<out<<" - "<<out+level+1<<endl;
 	out[0]=level;
 	out[1]=step*2;
-	memcpy(out+2*sizeof(int),field,level*sizeof(int));
+	cout<<" Copy: F-SW "<<field+2<<" - "<<field+level+1<<" to "<<out<<" - "<<out+level+1<<endl;
+	memcpy(out+2,field,level*sizeof(int));
 	next();
 	step *= 2;
 	return (out);
@@ -134,6 +146,8 @@ int Combination::msgLength(){
 
 int * Combination::getVals(){
 	int * out = new int[level];
+	cout<<" Create: MI "<<out<<" - "<<out+level-1<<endl;
+	cout<<" Copy: F-MI "<<field<<" - "<<field+level-1<<" to "<<out<<" - "<<out+level-1<<endl;
 	memcpy(out,field,level*sizeof(int));
 	return (out);
 }

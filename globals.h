@@ -7,6 +7,7 @@
 
 #ifndef GLOBALS_H
 #define	GLOBALS_H
+
 #include <cstdlib>
 #include <stdio.h>
 #include <iostream>

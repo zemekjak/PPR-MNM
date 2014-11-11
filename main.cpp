@@ -11,6 +11,7 @@
 #include <cstring>
 #include <climits>
 
+//#include "MemManagment.h"
 #include "Combination.h"
 #include "Comunication.h"
 #include "File.h"
@@ -19,6 +20,7 @@
 using namespace std;
 
 #define MPI_RUN
+#define DEBUGFile
 
 void getParameters(int argc, char** argv) {
     if (argc != 2) {
@@ -170,11 +172,12 @@ void executeParalel(int argc, char ** argv){
 			if(combination->test()){
 				cout<<combination->getLevel()<<" - ";
 				combination->print();
-				bestCount = combination->getLevel();
-                if(maxIndependence != NULL){
-                	delete[] maxIndependence;
+				if(maxIndependence != NULL){
+					cout<<" Delete: MI "<<maxIndependence<<" - "<<maxIndependence+bestCount-1<<endl;
+					delete[] maxIndependence;
                 	maxIndependence = NULL;
                 }
+				bestCount = combination->getLevel();
 				maxIndependence = combination->getVals();
 				sendBest();
 				break;

@@ -31,6 +31,7 @@ int token = 0;
 bool hasToken = false;
 int workRequestOffset = 0;
 
+
 double time() {
     return (MPI_Wtime());
 }
@@ -46,18 +47,6 @@ void sendRefuse(int dest){ // odmitnuti poslani prace, protoze proces sam praci 
     cout<<"Process:"<<processId<<" msg to:"<<dest<<" tag:"<<MSG_WORK_REQUEST_DENIED<<endl;
     MPI_Send(NULL, 0, MPI_INT, dest, MSG_WORK_REQUEST_DENIED, MPI_COMM_WORLD);
     cout<<"Process:"<<processId<<" msg send"<<endl;
-}
-
-void checkForTerminate(){
-    int flag;
-    MPI_Status status;
-    int buf;
-    MPI_Iprobe ( MPI_ANY_SOURCE, MSG_TERMINATE, MPI_COMM_WORLD, &flag, &status );
-    if(!flag)return;
-    cout<<"Process:"<<processId<<" Term msg from:"<<status.MPI_SOURCE<<" tag:"<<status.MPI_TAG<<endl;
-    MPI_Recv(&buf,0,MPI_INT,status.MPI_SOURCE,status.MPI_TAG,MPI_COMM_WORLD,&status);
-    cout<<"Process:"<<processId<<" Term msg recieved"<<endl;
-    finished = true;
 }
 
 
@@ -77,36 +66,17 @@ void sendToken(){
 }
 
 
-void checkForToken(){
-	if(hasToken){
-		return;
-	}
-	int flag;
-	int t;
-	MPI_Status status;
-	MPI_Iprobe ((processId+processNumber-1)%processNumber, MSG_TOKEN, MPI_COMM_WORLD, &flag, &status );
-	if(flag){
-		cout<<"Process:"<<processId<<" Token msg from:"<<status.MPI_SOURCE<<" tag:"<<status.MPI_TAG<<endl;
-		MPI_Recv(&t,1,MPI_INT,(processId+processNumber-1)%processNumber,status.MPI_TAG,MPI_COMM_WORLD,&status);
-		cout<<"Process:"<<processId<<" Token msg recieved"<<endl;
-		hasToken = true;
-		if(processId == 0 && t == 0){
-			finished = true;
-			sendTerminate();
-			return;
-		}
-		token |= t;
-	}
-}
-
 void sendBest(){
     int * msg = new int[bestCount+1];
+    cout<<" Create: SB "<<msg<<" - "<<msg+bestCount<<endl;
     msg[0]=bestCount;
     combination->setLimit(bestCount);
-    memcpy(msg+sizeof(int),maxIndependence,bestCount*sizeof(int));
+    cout<<" Copy: MI-SB "<<maxIndependence<<" - "<<maxIndependence+bestCount-1<<" to "<<msg+1<<" - "<<msg+bestCount<<endl;
+    memcpy(msg+1,maxIndependence,bestCount*sizeof(int));
     cout<<"Process:"<<processId<<" msg to:"<<(processId+1)%processNumber<<" tag:"<<MSG_BEST_RESULT<<endl;
     MPI_Send(msg, bestCount+1, MPI_INT, (processId+1)%processNumber, MSG_BEST_RESULT, MPI_COMM_WORLD);
     cout<<"Process:"<<processId<<" msg send"<<endl;
+    cout<<" Delete: SB "<<msg<<" - "<<msg+bestCount<<endl;
     delete[] msg;
 }
 
@@ -122,6 +92,7 @@ void sendWork(int dest){
     cout<<"Process:"<<processId<<" msg to:"<<dest<<" tag:"<<MSG_WORK_REQUEST_ACCEPTED<<endl;
     MPI_Send(buf, buf[0]+2, MPI_INT, dest, MSG_WORK_REQUEST_ACCEPTED, MPI_COMM_WORLD);
     cout<<"Process:"<<processId<<" msg send"<<endl;
+    cout<<" Delete: SW "<<buf<<" - "<<buf+buf[0]+1<<endl;
     delete[] buf;
 }
 
@@ -141,35 +112,43 @@ void checkForWorkRequest(){
 
 void checkForBestMsg(){
     int flag;
+    int count;
     MPI_Status status;
-    int * msg=new int[nodeCount];
+    int * msg;
     bool improved=false;
     while(true){
         MPI_Iprobe ( MPI_ANY_SOURCE, MSG_BEST_RESULT, MPI_COMM_WORLD, &flag, &status );
         if(!flag)break;
+        MPI_Get_count(&status, MPI_INT, &count);
+        msg = new int[count];
+        cout<<" Create: GB "<<msg<<" - "<<msg+count-1<<endl;
         cout<<"Process:"<<processId<<" Best msg from:"<<status.MPI_SOURCE<<" tag:"<<status.MPI_TAG<<endl;
-        MPI_Recv(msg,nodeCount,MPI_INT,status.MPI_SOURCE,status.MPI_TAG,MPI_COMM_WORLD,&status);
+        MPI_Recv(msg,count,MPI_INT,status.MPI_SOURCE,status.MPI_TAG,MPI_COMM_WORLD,&status);
         cout<<"Process:"<<processId<<" Best msg recieved"<<endl;
         if(bestCount<msg[0]){
             bestCount=msg[0];
             if(maxIndependence==NULL){
-                maxIndependence= new int[bestCount];
+            	cout<<" Delete: MI "<<maxIndependence<<" - "<<maxIndependence+bestCount-1<<endl;
+            	delete[] maxIndependence;
             }
-            memcpy(maxIndependence,msg+sizeof(int),bestCount*sizeof(int));
+            maxIndependence= new int[bestCount];
+            cout<<" Create: MI "<<maxIndependence<<" - "<<maxIndependence+bestCount-1<<endl;
+            cout<<" Copy: MI-GB "<<msg+1<<" - "<<msg+bestCount<<" to "<<maxIndependence<<" - "<<maxIndependence+bestCount-1<<endl;
+            memcpy(maxIndependence,msg+1,bestCount*sizeof(int));
+            combination->setLimit(bestCount);
             improved=true;
         }
+        cout<<" Delete: GB "<<msg<<" - "<<msg+count-1<<endl;
+        delete[] msg;
     }
     if(improved){
         sendBest();
     }
-    delete[] msg;
 }
 
 void checkForMsg(){
     checkForBestMsg();
     checkForWorkRequest();
-    checkForToken();
-    checkForTerminate();
 }
 
 int * getWork(){
@@ -178,13 +157,13 @@ int * getWork(){
 	}
     MPI_Status status;
     int i=1;
-    int * buf=new int[nodeCount];
+    int * buf = new int[nodeCount];
+    cout<<" Create: GW "<<buf<<" - "<<buf+nodeCount-1<<endl;
     cout<<"Process:"<<processId<<" msg to:"<<(processId+i)%processNumber<<" tag:"<<MSG_REQUEST_WORK<<endl;
     MPI_Send(NULL, 0, MPI_INT, (processId+i+workRequestOffset)%processNumber, MSG_REQUEST_WORK, MPI_COMM_WORLD);
     cout<<"Process:"<<processId<<" msg send"<<endl;
     while(true){  // cekani jestli nekdo odpovi na zadost o praci
         MPI_Recv(buf, nodeCount+1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
-        // TADY SE TO ZASEKAVA KVULI BLOKUJICIMU CEKANI NA ZPRAVU
         cout<<"Process:"<<processId<<" msg from:"<<status.MPI_SOURCE<<" tag:"<<status.MPI_TAG<<endl<<"Process:"<<processId<<" msg recieved"<<endl;
         switch(status.MPI_TAG){
             case MSG_REQUEST_WORK:{     // nekdo me zada o praci -> zadnou nemam -> odmitnuti poslani prace
@@ -205,7 +184,7 @@ int * getWork(){
                 return (buf);
             }break;
             case MSG_TERMINATE:{        // dostal jsem prikaz k ukonceni -> koncim
-                finished=true;
+            	cout<<" Delete: GW "<<buf<<" - "<<buf+nodeCount-1<<endl;
                 delete[] buf;
                 return (NULL);
             }break;
@@ -222,20 +201,24 @@ int * getWork(){
             	if(processId == 0 && token == 0){
             		sendTerminate();
             	    checkForBestMsg();
-                    delete[] buf;
+            	    cout<<" Delete: GW "<<buf<<" - "<<buf+nodeCount-1<<endl;
+            	    delete[] buf;
             	    return (NULL);
             	}
                 sendToken();
             }break;
             case MSG_BEST_RESULT:{      // prisel novy nejlepsi vysledek
                 if(bestCount<buf[0]){
-                	cout<<"Process:"<<processId<<" new best:"<<bestCount<<endl;
-                    bestCount=buf[0];
-                    if(maxIndependence==NULL){
-                        maxIndependence = new int[bestCount];
-                        cout<<"Process:"<<processId<<" creating maxIndependence:"<<buf<<endl;
+                    if(maxIndependence!=NULL){
+                    	cout<<" Delete: MI "<<maxIndependence<<" - "<<maxIndependence+bestCount-1<<endl;
+                    	delete[] maxIndependence;
                     }
-                    memcpy(maxIndependence,buf+sizeof(int),bestCount*sizeof(int));
+                    bestCount=buf[0];
+                    maxIndependence = new int[bestCount];
+                    cout<<" Create: MI "<<maxIndependence<<" - "<<maxIndependence+(bestCount-1)*sizeof(int)<<endl;
+                    cout<<" Copy: GW-MI "<<buf+1<<" - "<<buf+bestCount<<" to "<<maxIndependence<<" - "<<maxIndependence+bestCount-1<<endl;
+                    memcpy(maxIndependence,buf+1,bestCount*sizeof(int));
+                    combination->setLimit(bestCount);
                     sendBest();
                 }
             }break;
