@@ -20,7 +20,9 @@
 using namespace std;
 
 #define MPI_RUN
-#define DEBUGFile
+//#define DEBUGFile
+//#define MEM_DEBUG
+//#define MPI_MSG_DEBUG
 
 void getParameters(int argc, char** argv) {
     if (argc != 2) {
@@ -173,7 +175,9 @@ void executeParalel(int argc, char ** argv){
 				cout<<combination->getLevel()<<" - ";
 				combination->print();
 				if(maxIndependence != NULL){
+#ifdef MEM_DEBUG
 					cout<<" Delete: MI "<<maxIndependence<<" - "<<maxIndependence+bestCount-1<<endl;
+#endif
 					delete[] maxIndependence;
                 	maxIndependence = NULL;
                 }

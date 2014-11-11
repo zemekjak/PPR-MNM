@@ -24,7 +24,9 @@ Combination::Combination() {
 
 Combination::~Combination() {
 	if(field != NULL){
+#ifdef MEM_DEBUG
 		cout<<" Delete: F "<<field<<endl;
+#endif
 		delete[] field;
 		field = NULL;
 	}
@@ -42,29 +44,41 @@ void Combination::initialize(int n, Node ** nodes, int minDeg){
 	this->nodes = nodes;
 	this->size = n;
 	if(field!=NULL){
+#ifdef MEM_DEBUG
 		cout<<" Delete: F "<<field<<endl;
+#endif
 		delete[] field;
 	}
 	this->level = minDeg>n/2?n-minDeg:n/2;
 	this->field = new int[this->level];
+#ifdef MEM_DEBUG
 	cout<<" Create: F "<<field<<" - "<<field+level-1<<endl;
+#endif
 	initLevel();
 }
 
 void Combination::initialize(int n, Node ** nod, int * wrap){
 	if(field != NULL){
+#ifdef MEM_DEBUG
 		cout<<" Delete: F "<<field<<endl;
+#endif
 		delete field;
 	}
 	level = wrap[0];
 	step = wrap[1];
 	field = new int[level];
+#ifdef MEM_DEBUG
 	cout<<" Create: F "<<field<<" - "<<field+level-1<<endl;
+#endif
 	this->nodes = nodes;
 	size = n;
+#ifdef MEM_DEBUG
 	cout<<" Copy: GW-F "<<wrap+2<<" - "<<wrap+level+1<<" to "<<field<<" - "<<field+level+1<<endl;
+#endif
 	memcpy(field, wrap+2, level*sizeof(int));
+#ifdef MEM_DEBUG
 	cout<<" Delete: GW "<<wrap<<" - "<<wrap+level+1<<endl;
+#endif
 	delete[] wrap;
 }
 
@@ -130,10 +144,14 @@ int * Combination::split(){
 		return (NULL);
 	}
 	int * out = new int[(level+2)];
-	cout<<" Create: SW "<<out<<" - "<<out+level+1<<endl;
+#ifdef MEM_DEBUG
+	cout<<" Create: SW "<<out<<" - "<<out+level+1<<" "<<endl;
+#endif
 	out[0]=level;
 	out[1]=step*2;
+#ifdef MEM_DEBUG
 	cout<<" Copy: F-SW "<<field+2<<" - "<<field+level+1<<" to "<<out<<" - "<<out+level+1<<endl;
+#endif
 	memcpy(out+2,field,level*sizeof(int));
 	next();
 	step *= 2;
@@ -146,11 +164,14 @@ int Combination::msgLength(){
 
 int * Combination::getVals(){
 	int * out = new int[level];
+#ifdef MEM_DEBUG
 	cout<<" Create: MI "<<out<<" - "<<out+level-1<<endl;
 	cout<<" Copy: F-MI "<<field<<" - "<<field+level-1<<" to "<<out<<" - "<<out+level-1<<endl;
+#endif
 	memcpy(out,field,level*sizeof(int));
 	return (out);
 }
+
 void Combination::setLimit(int lim){
 	limit = lim;
 }
