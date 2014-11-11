@@ -56,7 +56,6 @@ void sendRefuse(int dest){ // odmitnuti poslani prace, protoze proces sam praci 
 #endif
 }
 
-
 void sendTerminate(){
     for(int i=0;i<processNumber;i++){
         if(i==processId)continue;
@@ -311,7 +310,6 @@ void initialize(int argc,char **argv){
 void finalize(){
     MPI_Finalize();
 }
-
 
 
 #endif	/* COMMUNICATION_H */
